@@ -4,9 +4,14 @@ import {
   Scheduler,
   DayView,
   Appointments,
+  WeekView,
+  Toolbar,
+  ViewSwitcher,
+  MonthView,
 } from "@devexpress/dx-react-scheduler-material-ui";
+import { useState } from "react";
+import { VIEW_NAME } from "../utils/constants";
 
-const currentDate = "2018-11-01";
 const schedulerData = [
   {
     startDate: "2018-11-01T09:45",
@@ -21,11 +26,26 @@ const schedulerData = [
 ];
 
 function UserScheduler() {
+  const [data, setData] = useState(schedulerData);
+  const [currentViewName, setCurrentViewName] = useState<string>(
+    VIEW_NAME.month
+  );
+
   return (
     <Paper>
-      <Scheduler data={schedulerData}>
-        <ViewState currentDate={currentDate} />
-        <DayView startDayHour={9} endDayHour={14} />
+      <Scheduler data={data}>
+        <ViewState
+          defaultCurrentDate="2018-07-25"
+          currentViewName={currentViewName}
+          onCurrentViewNameChange={(name) => setCurrentViewName(name)}
+        />
+
+        <WeekView startDayHour={10} endDayHour={19} />
+        <MonthView />
+        <DayView />
+
+        <Toolbar />
+        <ViewSwitcher />
         <Appointments />
       </Scheduler>
     </Paper>
