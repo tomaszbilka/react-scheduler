@@ -15,7 +15,7 @@ pnpm install
 ```
 
 4. create `.env` file and copy all envs from `.env.example`
-5. add all necesseary envs with your firebase credentials (it uses `reat-time database`)
+5. add all necessary envs with your firebase credentials (it uses `reat-time database`)
 6. run this command to start app locally:
 
 ```bash
