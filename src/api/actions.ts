@@ -1,9 +1,10 @@
-import app from "../firebaseConfig";
-import { get, getDatabase, push, ref, set } from "firebase/database";
-import moment from "moment";
-import type { AppointmentModel } from "@devexpress/dx-react-scheduler";
 import { DB_FOLDER } from "../utils/constants";
+import { get, getDatabase, push, ref, set } from "firebase/database";
 import { normalizeData } from "../utils/helpers";
+import app from "../firebaseConfig";
+import moment from "moment";
+
+import type { AppointmentModel } from "@devexpress/dx-react-scheduler";
 
 export const saveData = (
   data: Partial<AppointmentModel>,
@@ -42,4 +43,23 @@ export const readData = async (
     alert("error: " + error);
     setIsLaoding(false);
   }
+};
+
+export const updateData = (
+  data: Partial<AppointmentModel>,
+  setIsLaoding: React.Dispatch<React.SetStateAction<boolean>>
+) => {
+  const db = getDatabase(app);
+  const dataRef = ref(db, `${DB_FOLDER}/${data.id}`);
+
+  const newAppoitment = {
+    ...data,
+    startDate: moment(data.startDate).format(),
+    endDate: moment(data.endDate).format(),
+  };
+
+  set(dataRef, newAppoitment)
+    .then(() => alert("data saved!"))
+    .catch((error) => alert("error: " + error?.message))
+    .finally(() => setIsLaoding(false));
 };

@@ -21,7 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import { VIEW_NAME } from "../utils/constants";
 import { Backdrop, CircularProgress } from "@mui/material";
-import { readData, saveData } from "../api/actions";
+import { readData, saveData, updateData } from "../api/actions";
 
 function UserScheduler() {
   const [isLoading, setIsLaoding] = useState(false);
@@ -48,25 +48,24 @@ function UserScheduler() {
   useEffect(() => {
     fetchData();
   }, []);
-
+  console.log(data);
   const commitChanges = async ({ added, changed, deleted }: ChangeSet) => {
     setData((prev) => {
       let data = prev;
 
       if (added) {
         saveData(added, setIsLaoding);
-        fetchData();
       }
       if (changed) {
-        data = data?.map((appointment) =>
-          changed[appointment.id!]
-            ? { ...appointment, ...changed[appointment.id!] }
-            : appointment
-        );
+        const changedId = Object.keys(changed)[0];
+        const appoitmentToUpdate = data.find((el) => el.id === changedId);
+        const updates = Object.values(changed)[0];
+        updateData({ ...appoitmentToUpdate, ...updates }, setIsLaoding);
       }
       if (deleted !== undefined) {
         data = data.filter((appointment) => appointment.id !== deleted);
       }
+      fetchData();
       return data;
     });
   };
