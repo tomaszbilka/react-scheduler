@@ -18,10 +18,13 @@ import {
   AppointmentForm,
   EditRecurrenceMenu,
 } from "@devexpress/dx-react-scheduler-material-ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { VIEW_NAME } from "../utils/constants";
+import { Backdrop, CircularProgress } from "@mui/material";
+import { readData, saveData } from "../api/actions";
 
 function UserScheduler() {
+  const [isLoading, setIsLaoding] = useState(false);
   const [data, setData] = useState<AppointmentModel[] | []>([]);
   const [addedAppointment, setAddedAppointment] = useState<
     Partial<AppointmentModel> | undefined
@@ -32,24 +35,29 @@ function UserScheduler() {
   const [editingAppointment, setEditingAppointment] = useState<
     Partial<AppointmentModel> | undefined
   >(undefined);
-
   const [currentViewName, setCurrentViewName] = useState<string>(
     VIEW_NAME.month
   );
 
-  const commitChanges = ({ added, changed, deleted }: ChangeSet) => {
+  const fetchData = async () => {
+    setIsLaoding(true);
+    const data = await readData(setIsLaoding);
+    setData(data || []);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const commitChanges = async ({ added, changed, deleted }: ChangeSet) => {
     setData((prev) => {
       let data = prev;
 
       if (added) {
-        const startingAddedId =
-          //@ts-expect-error added data cant be empty
-          data.length > 0 ? data[data.length - 1].id + 1 : 0;
-        //@ts-expect-error code works
-        data = [...data, { id: startingAddedId, ...added }];
+        saveData(added, setIsLaoding);
+        fetchData();
       }
       if (changed) {
-        console.log({ changed });
         data = data?.map((appointment) =>
           changed[appointment.id!]
             ? { ...appointment, ...changed[appointment.id!] }
@@ -64,41 +72,48 @@ function UserScheduler() {
   };
 
   return (
-    <Paper>
-      <Scheduler data={data} locale="pl">
-        <ViewState
-          currentViewName={currentViewName}
-          defaultCurrentDate="2018-07-25"
-          onCurrentViewNameChange={(name) => setCurrentViewName(name)}
-        />
-        <EditingState
-          onCommitChanges={commitChanges}
-          addedAppointment={addedAppointment}
-          onAddedAppointmentChange={(apointment) =>
-            setAddedAppointment(apointment)
-          }
-          appointmentChanges={appointmentChanges}
-          onAppointmentChangesChange={(apointment) =>
-            setAppointmentChanges(apointment)
-          }
-          editingAppointment={editingAppointment}
-          onEditingAppointmentChange={(apointment) =>
-            setEditingAppointment(apointment)
-          }
-        />
-        <WeekView displayName="Tydzień" endDayHour={19} startDayHour={10} />
-        <MonthView displayName="Miesiąc" />
-        <DayView displayName="Dzień" />
-
-        <EditRecurrenceMenu />
-        <ConfirmationDialog />
-        <Toolbar />
-        <ViewSwitcher />
-        <Appointments />
-        <AppointmentTooltip showOpenButton showDeleteButton />
-        <AppointmentForm />
-      </Scheduler>
-    </Paper>
+    <>
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={isLoading}
+      >
+        <CircularProgress />
+      </Backdrop>
+      <Paper>
+        <Scheduler data={data} locale="pl">
+          <ViewState
+            currentViewName={currentViewName}
+            defaultCurrentDate="2018-07-25"
+            onCurrentViewNameChange={(name) => setCurrentViewName(name)}
+          />
+          <EditingState
+            onCommitChanges={commitChanges}
+            addedAppointment={addedAppointment}
+            onAddedAppointmentChange={(apointment) =>
+              setAddedAppointment(apointment)
+            }
+            appointmentChanges={appointmentChanges}
+            onAppointmentChangesChange={(apointment) =>
+              setAppointmentChanges(apointment)
+            }
+            editingAppointment={editingAppointment}
+            onEditingAppointmentChange={(apointment) =>
+              setEditingAppointment(apointment)
+            }
+          />
+          <WeekView displayName="Tydzień" endDayHour={19} startDayHour={10} />
+          <MonthView displayName="Miesiąc" />
+          <DayView displayName="Dzień" />
+          <EditRecurrenceMenu />
+          <ConfirmationDialog />
+          <Toolbar />
+          <ViewSwitcher />
+          <Appointments />
+          <AppointmentTooltip showOpenButton showDeleteButton />
+          <AppointmentForm />
+        </Scheduler>
+      </Paper>
+    </>
   );
 }
 

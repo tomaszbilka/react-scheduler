@@ -3,3 +3,5 @@ export const VIEW_NAME = {
   month: "Month",
   week: "Week",
 } as const;
+
+export const DB_FOLDER = "scheduler";
