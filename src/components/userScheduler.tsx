@@ -1,30 +1,33 @@
-import Paper from "@mui/material/Paper";
+import { useEffect, useState } from "react";
 import {
-  ViewState,
-  EditingState,
-  ChangeSet,
-  AppointmentModel,
-} from "@devexpress/dx-react-scheduler";
-import {
-  Scheduler,
-  DayView,
+  AppointmentForm,
   Appointments,
-  WeekView,
-  Toolbar,
-  ViewSwitcher,
-  MonthView,
   AppointmentTooltip,
   ConfirmationDialog,
-  AppointmentForm,
+  DateNavigator,
+  DayView,
   EditRecurrenceMenu,
+  MonthView,
+  Scheduler,
+  Toolbar,
+  ViewSwitcher,
+  WeekView,
 } from "@devexpress/dx-react-scheduler-material-ui";
-import { useEffect, useState } from "react";
-import { VIEW_NAME } from "../utils/constants";
+import {
+  AppointmentModel,
+  EditingState,
+  ViewState,
+} from "@devexpress/dx-react-scheduler";
 import { Backdrop, CircularProgress } from "@mui/material";
-import { deleteData, readData, saveData, updateData } from "../api/actions";
+import moment from "moment";
+import Paper from "@mui/material/Paper";
+
+import { commitChanges } from "../utils/helpers";
+import { readData } from "../api/actions";
+import { VIEW_NAME } from "../utils/constants";
 
 function UserScheduler() {
-  const [isLoading, setIsLaoding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<AppointmentModel[] | []>([]);
   const [addedAppointment, setAddedAppointment] = useState<
     Partial<AppointmentModel> | undefined
@@ -40,30 +43,14 @@ function UserScheduler() {
   );
 
   const fetchData = async () => {
-    setIsLaoding(true);
-    const data = await readData(setIsLaoding);
+    setIsLoading(true);
+    const data = await readData(setIsLoading);
     setData(data || []);
   };
 
   useEffect(() => {
     fetchData();
   }, []);
-
-  const commitChanges = async ({ added, changed, deleted }: ChangeSet) => {
-    if (added) {
-      saveData(added, setIsLaoding);
-    }
-    if (changed) {
-      const changedId = Object.keys(changed)[0];
-      const appoitmentToUpdate = data.find((el) => el.id === changedId);
-      const updates = Object.values(changed)[0];
-      updateData({ ...appoitmentToUpdate, ...updates }, setIsLaoding);
-    }
-    if (deleted !== undefined) {
-      deleteData(`${deleted}`, setIsLaoding);
-    }
-    fetchData();
-  };
 
   return (
     <>
@@ -77,11 +64,13 @@ function UserScheduler() {
         <Scheduler data={data} locale="pl">
           <ViewState
             currentViewName={currentViewName}
-            defaultCurrentDate="2018-07-25"
+            defaultCurrentDate={moment().format()}
             onCurrentViewNameChange={(name) => setCurrentViewName(name)}
           />
           <EditingState
-            onCommitChanges={commitChanges}
+            onCommitChanges={(props) =>
+              commitChanges({ ...props, setIsLoading, data, fetchData })
+            }
             addedAppointment={addedAppointment}
             onAddedAppointmentChange={(apointment) =>
               setAddedAppointment(apointment)
@@ -95,12 +84,13 @@ function UserScheduler() {
               setEditingAppointment(apointment)
             }
           />
-          <WeekView displayName="Tydzień" endDayHour={19} startDayHour={10} />
+          <WeekView displayName="Tydzień" endDayHour={19} startDayHour={8} />
           <MonthView displayName="Miesiąc" />
-          <DayView displayName="Dzień" />
+          <DayView displayName="Dzień" endDayHour={19} startDayHour={8} />
           <EditRecurrenceMenu />
           <ConfirmationDialog />
           <Toolbar />
+          <DateNavigator />
           <ViewSwitcher />
           <Appointments />
           <AppointmentTooltip showOpenButton showDeleteButton />

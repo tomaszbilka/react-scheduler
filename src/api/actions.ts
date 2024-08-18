@@ -1,14 +1,15 @@
-import { DB_FOLDER } from "../utils/constants";
 import { get, getDatabase, push, ref, remove, set } from "firebase/database";
+import moment from "moment";
+
+import { DB_FOLDER } from "../utils/constants";
 import { normalizeData } from "../utils/helpers";
 import app from "../firebaseConfig";
-import moment from "moment";
 
 import type { AppointmentModel } from "@devexpress/dx-react-scheduler";
 
 export const saveData = (
   data: Partial<AppointmentModel>,
-  setIsLaoding: React.Dispatch<React.SetStateAction<boolean>>
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const db = getDatabase(app);
   const newDataRef = push(ref(db, DB_FOLDER));
@@ -22,32 +23,32 @@ export const saveData = (
   set(newDataRef, newAppoitment)
     .then(() => alert("data saved!"))
     .catch((error) => alert("error: " + error?.message))
-    .finally(() => setIsLaoding(false));
+    .finally(() => setIsLoading(false));
 };
 
 export const readData = async (
-  setIsLaoding: React.Dispatch<React.SetStateAction<boolean>>
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const db = getDatabase();
   const dataRef = ref(db, DB_FOLDER);
   try {
     const snapshot = await get(dataRef);
     if (snapshot.exists()) {
-      setIsLaoding(false);
+      setIsLoading(false);
       return normalizeData(snapshot.val());
     } else {
       alert("error with fetching data");
-      setIsLaoding(false);
+      setIsLoading(false);
     }
   } catch (error) {
     alert("error: " + error);
-    setIsLaoding(false);
+    setIsLoading(false);
   }
 };
 
 export const updateData = (
   data: Partial<AppointmentModel>,
-  setIsLaoding: React.Dispatch<React.SetStateAction<boolean>>
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const db = getDatabase(app);
   const dataRef = ref(db, `${DB_FOLDER}/${data.id}`);
@@ -61,21 +62,21 @@ export const updateData = (
   set(dataRef, newAppoitment)
     .then(() => alert("data saved!"))
     .catch((error) => alert("error: " + error?.message))
-    .finally(() => setIsLaoding(false));
+    .finally(() => setIsLoading(false));
 };
 
 export const deleteData = async (
   id: string,
-  setIsLaoding: React.Dispatch<React.SetStateAction<boolean>>
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const db = getDatabase(app);
   const dataRef = ref(db, `${DB_FOLDER}/${id}`);
   try {
     await remove(dataRef);
     alert("data removed!");
-    setIsLaoding(false);
+    setIsLoading(false);
   } catch (error) {
     alert("error: " + error);
-    setIsLaoding(false);
+    setIsLoading(false);
   }
 };
